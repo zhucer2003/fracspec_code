@@ -1,64 +1,91 @@
 close all
 
 set(0, 'DefaultLineLinewidth', 2)
-xx = linspace(-1, 1, 100);
 
-nn = 2:20;
+nn = ceil(logspace(2,2.61,100));
+nn = [nn(1) nn];
 err2 = 0*nn; err1 = err2;
 
+xstar = linspace(-1,1,101);
+xstar = .5;
+
+ep = .0001;
+
+
+% Error 2:
+nMax = nn(end);
+n11 = ceil(1.1*nMax);
+u2 = example10(n11, ep);
+sol = myeval(u2, xstar);
+
+loopnum = 1;
+t = zeros(nMax, 1);
+
 for n = nn
-    
+
+    n
     % Solve for each n:
-    [u, A, sol, rhs] = example10(n);
+    tic
+    for loop = 1:loopnum
+        [u, A] = example10(n, ep);
+        tmp = toc;
+    end
+    t(n) = toc/loopnum;
     
     % Error 1:
-    err1(n) = norm(myeval(u, xx) - sol(xx), inf);
-    
-    % Error 2:
-    n11 = ceil(1.1*n);
-    u2 = example10(n11);
-    err2(n) = norm((u - u2([1:n, n11+(1:n)])), 2);
-    
+    err1(n) = norm(myeval(u, xstar) - sol, inf);
 end
 
 %%
 % Plotting:
 
 figure(1) % Solution
-plot(xx, myeval(u, xx));
-ylim([0, 1]), grid on
+xx = linspace(-1, 1, 10001);
+uu = myeval(u, xx);
+plot(xx, real(uu), xx, imag(uu));
+% ylim([0, 1.1]), grid on
 drawnow, shg, pause(eps)
-print -depsc2 ../../../paper/figures/example10a
+legend('real', 'imag')
+print -depsc2 ../fracspec/paper/figures/example10a
 
+%%
+figure(5)
+N = chebop(@(x,u) ep/10/sqrt(2)*diff(u,2) + x.*u, [-1 1]); 
+N.lbc = 0; N.rbc = 1; 
+plot(N\0), shg
+
+print -depsc2 ../fracspec/paper/figures/example10a_zoom
+alignfigs
+
+
+%%
 figure(2) % Error
-semilogy(nn, err1(nn), '-', nn, err2(nn), '--');
+% semilogy(nn, err1(nn), '-', nn, err2(nn), '-');
+semilogy(nn, err1(nn));
 xlim([0, n])
-ylim([1e-16, 1e1])
+% ylim([1e-16, 1e1])
 grid on
 drawnow, shg, pause(eps)
-print -depsc2 ../../../paper/figures/example10c
+% legend('pointwise', 'coefficients')
+title('Fractional Airy, eps = 0.0001')
+print -depsc2 ../fracspec/paper/figures/example10c
 
 figure(3) % Spy
 spy(A)
 drawnow, shg, pause(eps)
-print -depsc2 ../../../paper/figures/example10d
-
-alignfigs
+print -depsc2 ../fracspec/paper/figures/example10d
 
 %%
-% % Verification:
-% x = chebfun('x');
-% L = legpoly(0:n-1);
-% U = chebpoly(0:n-1, 2);
-% u1 = L*u(1:n);
-% u2 = sqrt(1+x).*(U*u((n+1):2*n));
-% figure(4) 
-% w1 = u1(xx) + feval(diff(u1, .5, 'caputo'), xx) + feval(diff(u1, 2), xx);
-% w2 = u2(xx) + feval(diff(u2, .5, 'caputo'), xx) + feval(diff(u2, 2), xx);
-% rhs_cap = w1 + w2;
-% plot(xx, 0*(xx)), hold on
-% plot(xx, rhs_cap, '--')
-% hold off
-% figure(5)
-% plot(xx, w1 + w2 - 0)
-% alignfigs
+figure(4)
+loglog(nn, t(nn),'-');
+hold on
+nn2 = nn(ceil(length(nn)/2)+1:end);
+plot(nn, 1.1*nn./nn(end)*t(nn(end)), ':', 'color', [1 1 1]*.6);
+hold off
+drawnow, shg, pause(eps)
+ylim([10^(-2.5), 1e0])
+grid on
+print -depsc2 ../fracspec/paper/figures/example10e
+
+%%
+alignfigs

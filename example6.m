@@ -7,12 +7,11 @@ sol = @(x) NaN*x;
     
 % Initialise block operators
 init
-idx2 = idx(1:end-1);
 
 % Construct the operator for this example:
 A = DD(1) + EE(1)*(DD(0.5) + EE(.5));
 % Construct the rhs:
-rhs = [coeffs(e, n, .5) ; coeffs(f, n, 1)];
+rhs = [coeffs(e, n, 1.5) ; coeffs(f, n, 2)];
 
 % Re-order:
 A = A(idx,idx); 

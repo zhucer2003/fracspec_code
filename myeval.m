@@ -1,4 +1,13 @@
 function uu = myeval(u, x, flag)
+
+if ( size(u, 2) > 1 )
+    uu = zeros(numel(x), size(u,2));
+    for k = 1:size(u,2)
+        uu(:,k) = myeval(u(:,k), x);
+    end
+    return
+end
+
 n = length(u)/2;
 if ( nargin < 3 ), flag = 0; end
 if ( flag ) 

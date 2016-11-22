@@ -1,32 +1,39 @@
-function [u, A, sol] = example8(n)
+function [u, A, sol, rhsOut] = example9(n)
 
-bc = [0; 1];
-mu = 1;
-e = 0;
-f = 0;
-sol = @(x) NaN*x;
+bc = 1;
+e = @(x) 0*x; f = @(x) 0*x;
+sol = @(x) exp(1+x).*erfc(sqrt(1+x));
     
 % Initialise block operators
 init
-
+idx = [1 ; idx+1];
+    
 % Construct the operator for this example:
-A = DD(2) + EE(2)*(mu*DD(1.5) + EE(1.5)*EE(1)*EE(.5));
+A1 = [e1;z];
+A2 = QQ(1) + QQ(.5);
+A = [A1, A2];
 % Construct the rhs:
 rhs = [coeffs(e, n, .5) ; coeffs(f, n, 1)];
+
+% Construct and append boundary conditions:
+ee = ones(1,n); ee2 = ee; ee2(2:2:end) = -1;
+BC = [ee2, z']*QQ(1);
+
+A = [1 BC ; A];
+rhs = [bc ; rhs];
 
 % Re-order:
 A = A(idx,idx); 
 rhs = rhs(idx);
+    
+% Solve for v
+% v(idx,1) = A\rhs;
+v(idx,1) = mysolve(A, rhs, 1);
 
-% Construct and append boundary conditions:
-BC = [ones(1,n), sqrt(2)*(1:n)]; % Right Dirichlet
-BC = [BC ; BC];
-BC(1, 2:2:end) = -BC(1,2:2:end); BC(1,n+1:end) = 0; % Left Dirichlet
-BC = BC(:,idx);
-A = [BC ; A(1:end-2,:)];
-rhs = [bc ; rhs(1:end-2)];
+% Reconstruct u:
+u(1:2*n,1) = QQ(1)*v(2:end);
+u(1) = u(1) + v(1);
 
-% Solve:
-u(idx,1) = A\rhs;
+rhsOut = @(x) e(x) + sqrt(1+x).*f(x);
 
 end

@@ -1,7 +1,11 @@
 function M = multmat(n, f, lam)
 
 if ( isa(f, 'function_handle') )
-    c = chebtech1.vals2coeffs(f(chebpts(n,1))); % T coeffs
+    f = chebtech1(f(chebpts(n,1)));
+    c = f.coeffs;
+    data = struct('hscale', 1, 'vscale', 1);
+    [~, cutoff] = standardCheck(f, [], data, chebtech.techPref);
+    c = c(1:cutoff);
     c = ultra2ultra(c, 0, lam);                 % C^(lam) coeffs
 else
     c = f(:);
@@ -21,6 +25,10 @@ J = spdiags(.5*[(nn+1)./(nn+lam), (nn+2*lam-1)./(nn+lam)], [-1,1], n, n);
 % Initialise recurrence:
 Cm1 = sparse(0); C = speye(n);
 M = c(1)*C;
+
+if ( ~any(c) )
+    return
+end
 
 % Recurrence relation:
 for n = 0:length(c)-2
